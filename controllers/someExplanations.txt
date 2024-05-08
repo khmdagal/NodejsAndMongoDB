@@ -1,0 +1,54 @@
+/*
+ // Feature 1 = DIFFERENT WAY OF BUILDING QUERY
+    /*
+    //adding query
+    //const tours = await Tour.find({duration: 5,difficulty:"easy"})
+    //const tours = await Tour.find(req.query);
+    //console.log(req.query);
+
+    // here we are distructuring query req.query object and then we want 
+    // to delete all the fields in the query that we don't want
+    const objectQuery = { ...req.query }
+    const exculdedFields = ['page', 'sort', 'limit', 'fields'];
+    exculdedFields.forEach((el) => delete objectQuery[el]);
+
+    const tours = await Tour.find(objectQuery);
+    console.log(objectQuery)
+    
+    // Another way of querying
+    const tours = await Tour.find()
+      .where('duration')
+      .equals(5)
+      .where('difficulty')
+      .equals('easy');
+
+
+    // Build Query
+    // const objectQuery = { ...req.query };
+    // const exculdedFields = ['page', 'sort', 'limit', 'fields'];
+    // exculdedFields.forEach((el) => delete objectQuery[el]);
+
+    // let query = Tour.find(objectQuery);
+
+    //Feature 3 = Field Limiting
+    // if (req.query.fields) {
+    //   const fields = req.query.fields.split(',').join(' ');
+    //   query = query.select(fields);
+    // } else {
+    //   // by adding - sign you are excluding this field to be returned
+    //   query = query.select('-__v');
+    // }
+
+    // Feature 4 = PAGINATION
+    // const page = req.query.page * 1 || 1;
+    // const limit = req.query.limit * 1 || 100;
+    // const skip = (page - 1) * limit;
+    // query = query.skip(skip).limit(limit);
+
+    // if the page user requested is not exist to handle the error
+    // if (req.query.page) {
+    //   const numTours = await Tour.countDocuments();
+    //   if (skip >= numTours) throw new Error('This page does not exist');
+    // }
+    // Execute Query
+*/
