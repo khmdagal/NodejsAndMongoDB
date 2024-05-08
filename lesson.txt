@@ -1,0 +1,89 @@
+===== REST Architecture =====
+     
+REpresentational 
+States
+Transfer
+
+
+==== Principles of REST apis ====
+1) Separate API into logical resources.
+2) Expose structured resouce-based URLs
+3) Use HTTP methods (verbs)
+4) Send data as JSON (usually)
+5) Be statless
+
+==== Separate API into logical resources====
+In the context of REST a resource means a representation of something
+like object that has data, and any infomation can be named a resouce
+example: tours, users, reviews
+this is important it should be NAME not VERB.
+
+=== Expose structured resouce-based URLs ===
+URL is an address
+example: https://www.natours.com/addNewTour
+addNewTour = is the endpoint
+
+
+=== Use HTTP methods (verbs) ====
+making endpoints to follow HTTP methods inorder to perform actions on data
+remember this "Endpoints should contain only resources(nouns) and use HTTP methods for actions"
+
+example:           HTTP
+/addNewTour        => POST   /tours  "Creates"
+/getTour           => GET    /tours  "Reads"
+/updateTour        => PUT    /tours/7 
+                   => PATCH  /tours/7
+    PUT : The client is supposed to send the entire updated object
+    PATCH: it is supposed to send only the part of the object that is updated.
+/deleteTour        => DELETE  /tours/7  "deletes tours id 7"
+/getToursByUser    => GET     /users/3/tours
+/deleteToursByUser => DELETE  /users/3/tours/9
+
+
+
+Note: the endpoint is the same but the HTTP methods are different
+for instance if the data request come in with get is getting data
+whereas if it comes with POST request is it bringing data
+
+
+====  Send data as JSON (usually) ====
+JSON is very light weight and commonly used in all programming languages
+it is more like normal JavaScript object structure but the difference is
+in the JSON all the keys should be string formated.
+
+JSON ==>                  
+original data structure                    
+
+response formating ==>        
+
+JSend
+We create a new object with the {"status":"sucess" and "data":{}}
+and then send this to the client. and this is called envloping to mitigate some 
+security issues and other problems.
+
+== There are other response formatting methods
+* JSOPN:API
+* OData JSON Protocal
+
+
+
+======= Be statless =====
+
+All the state should handle in the client-side. Server should not remember any previous requests
+state means a piece of data that might change overtime
+example1: Whether a certain user is loggedIn 
+example2: a page with several pages on it, which is the current page.
+
+
+== bad request 
+GET /tours/netPage   => to server => nextPage = currentPage + 1 send(nextPage)
+in this example sever has to remember which number is the current page
+
+
+== good request
+GET /tours/page/6   => to server => send(6)
+in this example the state coming from the client, and the server not handling any state.
+
+==== more reading
+What is the stateless API is?
+

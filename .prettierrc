@@ -1,0 +1,11 @@
+{
+  "singleQuote": true,
+  "plugins": ["prettier"],
+  "prettier/prettier": [
+    "error",
+    {
+      "singleQuote": true,
+      "parser": "flow"
+    }
+  ]
+}
