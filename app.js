@@ -21,7 +21,7 @@ app.use(morgan('tiny'));
 app.use((req, res, next) => {
   // we are manipulating request to add request time property to the req object
   req.requestTime = new Date().toISOString();
-console.log(req.headers);
+ //console.log(req.headers);
   next();
 });
 
