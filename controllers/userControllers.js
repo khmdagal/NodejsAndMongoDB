@@ -5,14 +5,14 @@ const catchAsync = require('../utils/catchAsync');
 
 exports.getAllUsers = catchAsync(async (req, res, next) => {
   const users = await User.find();
-  res.status(200).json({
+  return res.status(200).json({
     status: 'success',
     requestedTime: req.requestTime,
     data: {
       users
     }
   });
-  next();
+ 
 });
 // exports.postUsers = (req, res) => {
 //   const newUser = Object.assign(req.body);
