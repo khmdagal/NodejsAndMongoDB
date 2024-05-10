@@ -13,6 +13,7 @@ exports.signUp = catchAsync(async (req, res, next) => {
   const newUser = await User.create({
     name: req.body.name,
     email: req.body.email,
+    role: req.body.role,
     password: req.body.password,
     passwordConfirm: req.body.passwordConfirm,
     passwordChangedAt: req.body.passwordChangedAt
@@ -107,5 +108,22 @@ exports.protect = catchAsync(async (req, res, next) => {
   }
 
   //THEN NOW GRANT ACCESS TO PROJECTED ROUTE
+
+  // If we want to pass some data from one middleware to another the req travels from one middleware to another
+  // so it is good practice to assign the authenticated user who access was granted
+  req.user = accessedUser;
   next();
 });
+
+exports.restrictTo = (...roles) => {
+  //console.log(roles)
+  return (req, res, next) => {
+    //console.log("==user=====>>",req.user)
+    if (!roles.includes(req.user.role)) {
+      return next(
+        new AppError(`You don't have permission to perform this action`, 402)
+      );
+    }
+    next();
+  };
+};

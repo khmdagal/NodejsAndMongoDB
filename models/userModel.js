@@ -22,7 +22,8 @@ const userSchema = new Schema({
     type: String,
     //required: [true, 'A user must have a role'],
     enum: {
-      values: ['Admin', 'driver', 'staff', 'customer']
+      values: ['user', 'Admin', 'super-admin', 'staff', 'customer'],
+      default: 'user'
     }
   },
   photo: String,
