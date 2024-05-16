@@ -1,3 +1,4 @@
+const crypto = require('crypto')
 const mongoose = require('mongoose');
 const validator = require('validator');
 const bcrypt = require('bcryptjs');
@@ -46,7 +47,9 @@ const userSchema = new Schema({
   passwordChangedAt: {
     type: Date,
     default: Date.now()
-  }
+  },
+  passwordResetToken: String,
+  passwordResetExpires: Date
 });
 
 userSchema.pre('save', async function(next) {
@@ -105,6 +108,41 @@ userSchema.methods.changedPasswordAfterTokenIssued = function(JWTTimeStamp) {
   // that means the token issued time will be bigger then the password changed time.
 };
 
+// userSchema.method.generateRestPasswordToken =  function () {
+//   // 1) we required built-in crypto module at the top of this file
+//   // 2) then now inside this function/ this instance method we need to  create new variable to store the generated token
+//   const restToken = crypto.randomBytes(32).toString('hex')
+ 
+//   // Remember now we only we modified the document 'database' but not save anything yet
+//   //======= these two lines only modifies the documents
+//   this.restPasswordToken = crypto.createHash('sha256')
+//     .update(restToken)
+//     .digest('hex');
+  
+//   console.log({restToken},this.restPasswordTokenExpire)
+  
+//   this.restPasswordTokenExpire = Date.now() + 10 * 60 * 1000;
+//   //=======
+//   // ==== we are doing the actual save in the forgetPassword() function in the authController
+
+  
+//   return restToken
+// }
+
+userSchema.methods.createPasswordResetToken = function() {
+  const resetToken = crypto.randomBytes(32).toString('hex');
+
+  this.passwordResetToken = crypto
+    .createHash('sha256')
+    .update(resetToken)
+    .digest('hex');
+
+  console.log({ resetToken }, this.passwordResetToken);
+
+  this.passwordResetExpires = Date.now() + 10 * 60 * 1000;
+
+  return resetToken;
+};
 const User = mongoose.model('User', userSchema);
 
 module.exports = User;
