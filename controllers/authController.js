@@ -1,8 +1,10 @@
+const crypto = require('crypto')
 const { promisify } = require('util');
 const jwt = require('jsonwebtoken');
 const User = require('../models/userModel');
 const catchAsync = require('../utils/catchAsync');
 const AppError = require('../utils/appError');
+const sendEmail = require('../utils/email')
 
 const signToken = id =>
   jwt.sign({ id }, process.env.JWT_SECRET, {
@@ -137,9 +139,81 @@ exports.forgetPassword = catchAsync(async (req, res, next) => {
   // Generate the random rest token
   const resetToken = user.createPasswordResetToken()
   await user.save({ validateBeforeSave: false })
-  return resetToken
-  // send it to the user's email
-})
-exports.reset = catchAsync(async (req, res, next) => {
   
+  //===== sending it to the user's email
+  // set the URl
+  const resetURL = `${req.protocol}://${req.get('host')}/api/v1/user/resetPassword/${resetToken}`;
+  // Set the message
+  const message = `Forgot your password? Submit a PATCH request with your new password and
+  passwordConfirm to :${resetURL}. \n If you didn't forget your password, please ignore this email!`;
+  // send the email
+
+  try {
+    await sendEmail({
+    email: user.email,
+    subject: 'Your password rest token (valid 10 min)',
+    text: message
+  })
+
+  res.status(200).json({
+    status: 'success',
+    message: message
+  })
+  } catch (error) {
+    user.passwordResetToken = undefined,
+    user.passwordResetExpires = undefined,
+    next(new AppError('error happened', 500))
+  }
+  
+
+
+})
+exports.resetPassword = catchAsync(async (req, res, next) => {
+  // 1) Get based on the token
+  const hashedToken = crypto.createHash('sha256').update(req.params.token).digest('hex')
+  const user = await User.findOne({
+    passwordResetToken: hashedToken,
+    passwordResetExpires: { $gt: Date.now() }
+  })
+  // 2) If token has not expired, and there is user, set the new password
+  if (!user) {
+    next(new AppError('Token is invalid or expired', 400))
+  }
+  // 3) Update changedPasswordAt property for the user
+  user.password = req.body.password;
+  user.passwordConfirm = req.body.passwordConfirm;
+  user.passwordResetToken = undefined;
+  user.passwordResetExpires = undefined
+  // the above code will only modify the document but not saved so we need to save the changes now
+  await user.save() // and now we don't need to turn off the validation because we want to the validation to take palace
+  // 4) Log the user in, send JWT
+
+  const token = signToken(user._id);
+ 
+  res.status(200).json({
+    token: token
+  });
+
+});
+
+exports.updatePassword = catchAsync(async (req, res, next) => {
+  // 1 get user from collection
+const user = await User.findById(req.user._id).select('+password')
+  // 2 Check if the posted password is the current password and correct
+  if (!(await user.correctPassword(req.body.passwordCurrent, user.password))) {
+    next(new AppError('Your current password is wrong', 401))
+  }
+  
+  // 3 if so update the password to the new one
+  user.password = req.body.password
+  user.passwordConfirm = req.body.passwordConfirm
+  await user.save()
+
+  // 4 log user in, and send JWT token
+const token = signToken(user._id);
+  
+  res.status(200).json({
+    status: 'success',
+    newTokenAfterPasswordUpdated: token
+  });
 })

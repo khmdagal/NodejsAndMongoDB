@@ -2,8 +2,6 @@ const crypto = require('crypto')
 const mongoose = require('mongoose');
 const validator = require('validator');
 const bcrypt = require('bcryptjs');
-const { types } = require('pg');
-
 const { Schema } = mongoose;
 
 const userSchema = new Schema({
@@ -63,6 +61,17 @@ userSchema.pre('save', async function(next) {
   this.passwordConfirm = undefined;
   next();
 });
+
+userSchema.pre('save', async function (next) {
+  if (!this.isModified(this.password) || this.isNew) next()
+  
+  // The aim of this subtraction Date.now() - 1000; is to all the token to be later then the passwordChangedAt field so that
+  // the token be valid, otherwise what could happen is the token be send before the passwordChangedAt is updated
+  // and that makes the token invalid since it was issued before the password was changed.
+  this.passwordChangedAt = Date.now() - 1000;
+
+  next()
+})
 
 // We are using the instance method to check if the entered password matches the original password that
 // where hashed and store the database
