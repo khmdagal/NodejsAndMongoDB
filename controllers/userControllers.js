@@ -1,7 +1,14 @@
-// core modules
-// const fs = require('fs');
 const User = require('../models/userModel');
 const catchAsync = require('../utils/catchAsync');
+const AppError = require('../utils/appError')
+
+const filterObj = (obj, ...allowedFields) => {
+  const newObj = {}
+  Object.keys(obj).forEach(el => {
+    if(allowedFields.includes(el)) newObj[el] = obj[el]
+  }) 
+  return newObj
+}
 
 exports.getAllUsers = catchAsync(async (req, res, next) => {
   const users = await User.find();
@@ -14,6 +21,31 @@ exports.getAllUsers = catchAsync(async (req, res, next) => {
   });
  
 });
+
+exports.updateUserData = catchAsync(async (req, res, next) => {
+  // 1 Create error if user post password data
+  if (req.body.password || req.body.passwordConfirm) {
+   return next(new AppError('Your are not allowed to change password in the route', 400))
+  }
+  // 2 filter user input fields
+  //== This second step is not to allow the user to have the ability to change every field they want
+  const filteredBody = filterObj(req.body, 'email', 'name');
+  // 3 Update user document
+  const updatedUser = await User.findByIdAndUpdate(req.user.id, filteredBody, {
+    new: true,
+    runValidators: true
+  })
+
+  res.status(200).json({
+    status: "success",
+    data: updatedUser
+  })
+
+
+})
+
+
+
 // exports.postUsers = (req, res) => {
 //   const newUser = Object.assign(req.body);
 //   users.push(newUser);
