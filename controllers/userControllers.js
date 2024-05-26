@@ -44,7 +44,14 @@ exports.updateUserData = catchAsync(async (req, res, next) => {
 
 })
 
-
+exports.deleteUser = catchAsync(async (req, res, next) => {
+  const user = await User.findByIdAndUpdate(req.user.id, { isActive: false });
+  res.status(204).json({
+    status: 'success',
+    data: null
+  })
+  
+})
 
 // exports.postUsers = (req, res) => {
 //   const newUser = Object.assign(req.body);

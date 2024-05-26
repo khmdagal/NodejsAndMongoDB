@@ -46,6 +46,11 @@ const userSchema = new Schema({
     type: Date,
     default: Date.now()
   },
+  isActive: {
+    type: Boolean,
+    default: true,
+    select: false
+  },
   passwordResetToken: String,
   passwordResetExpires: Date
 });
@@ -71,6 +76,14 @@ userSchema.pre('save', async function (next) {
   this.passwordChangedAt = Date.now() - 1000;
 
   next()
+})
+
+userSchema.pre(/^find/, function () {
+  // this middleware will be run before any FIND operation
+  // One important thing to remember is when a user is set to 'inactive' by making 'isActive = true'
+  // then when that user tries to login after deactivated, that user can not login in because of the power of this middleware
+  // moreover, this middleware will be run and it will not find that deactivated user.
+  this.find({isActive:{$ne: false}})
 })
 
 // We are using the instance method to check if the entered password matches the original password that
