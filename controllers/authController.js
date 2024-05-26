@@ -11,6 +11,16 @@ const signToken = id =>
     expiresIn: process.env.JWT_EXPIRES_IN
   });
 
+const createAndSendToken = (user, statusCode, res) => {
+  const token = signToken(user._id);
+  res.status(statusCode).json({
+    status: 'success',
+    token,
+    data: {
+      user
+    }
+  })
+}
 exports.signUp = catchAsync(async (req, res, next) => {
   const newUser = await User.create({
     name: req.body.name,
@@ -21,16 +31,7 @@ exports.signUp = catchAsync(async (req, res, next) => {
     passwordChangedAt: req.body.passwordChangedAt
   });
   // the best practice is store the secret in the configuration file 'env' file
-  const token = jwt.sign({ id: newUser._id }, process.env.JWT_SECRET, {
-    expiresIn: process.env.JWT_EXPIRES_IN
-  });
-  return res.status(201).json({
-    status: 'success',
-    token,
-    data: {
-      user: newUser
-    }
-  });
+  createAndSendToken(newUser, 201,res)
 });
 
 exports.login = catchAsync(async (req, res, next) => {
@@ -47,15 +48,13 @@ exports.login = catchAsync(async (req, res, next) => {
     return next(new AppError('Incorrect email or password', 401));
   }
 
-  const token = signToken(user._id);
+  //const token = signToken(user._id); we replace this token creation function
   // here we are calling the function the we created in the model to check if the entered password really matched the hashed password that is stored in the database.
   // === REMEMBER : the 'user' we are calling here is
   //const correct = !(await user.correctPassword(password, user.password)); // this should have await because is return a promise
   // if (!correct) next(new AppError('Incorrect email or password', 401));
 
-  res.status(200).json({
-    token: token
-  });
+  createAndSendToken(user, 200,res)
 });
 
 exports.protect = catchAsync(async (req, res, next) => {
@@ -188,12 +187,8 @@ exports.resetPassword = catchAsync(async (req, res, next) => {
   await user.save() // and now we don't need to turn off the validation because we want to the validation to take palace
   // 4) Log the user in, send JWT
 
-  const token = signToken(user._id);
- 
-  res.status(200).json({
-    token: token
-  });
-
+  
+ createAndSendToken(user,200,res)
 });
 
 exports.updatePassword = catchAsync(async (req, res, next) => {
@@ -210,10 +205,14 @@ const user = await User.findById(req.user._id).select('+password')
   await user.save()
 
   // 4 log user in, and send JWT token
+  /*
+  We don't need this any more but keep it here for learning and remembering purpose
 const token = signToken(user._id);
   
   res.status(200).json({
     status: 'success',
     newTokenAfterPasswordUpdated: token
   });
+*/
+   createAndSendToken(user,200,res)
 })
