@@ -13,6 +13,21 @@ const signToken = id =>
 
 const createAndSendToken = (user, statusCode, res) => {
   const token = signToken(user._id);
+
+  // sending the token through the cookie
+  // When sending cookies we attached it to the RESPONSE
+  const cookieOptions = {
+    expires: new Date(Date.now() + process.env.JWT_COOKIE_EXPIRES_IN * 24 * 60 * 60 * 1000), // we converting to milliseconds
+    //secure: true, // this option encrypting the token, I just comment out because I am testing this in the postman now
+    httpOnly:true // this option will make impossible to manipulate the token over the browser 
+  }
+  
+  if (process.env.NODE_ENV === 'production') cookieOptions.secure = true;
+
+  res.cookie('jwt',token,cookieOptions)
+
+
+
   res.status(statusCode).json({
     status: 'success',
     token,
