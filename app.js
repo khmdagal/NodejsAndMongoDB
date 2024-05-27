@@ -5,6 +5,7 @@ const rateLimit = require('express-rate-limit');
 const helmet = require('helmet');
 const mongoSanitize = require('express-mongo-sanitize');
 const xss = require('xss-clean');
+const hpp = require('hpp')
 
 
 // Dev modules
@@ -57,6 +58,21 @@ app.use(mongoSanitize())
 app.use(xss()) // this will clean any malicious html code, and it will convert all HTML symbols/
                // for the server side you can add extra validation to mongoose validation and will also protect from xss attacks.
 
+
+//==== Preventing parameter pollution 
+// We passed the whitelist array all the duplication fields we allow
+app.use(hpp({
+  whitelist: [
+    'duration',
+    'ratingsQuantity',
+    'ratingsAverage',
+    'price',
+    'maxGroupSize',
+    'difficulty'
+  ]
+}))
+
+        
 //==== Serving static files
 app.use(express.static(`${__dirname}/public`));
 app.use(morgan('tiny'));
