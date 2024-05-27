@@ -1,22 +1,37 @@
 // core modules
 const express = require('express');
 const morgan = require('morgan');
-const rateLimit = require('express-rate-limit')
-const AppError = require('./utils/appError');
-const globalErrorHandling = require('./controllers/errorController');
+const rateLimit = require('express-rate-limit');
+const helmet = require('helmet');
+const mongoSanitize = require('express-mongo-sanitize');
+const xss = require('xss-clean');
+
 
 // Dev modules
+const AppError = require('./utils/appError');
+const globalErrorHandling = require('./controllers/errorController');
 const tourRouter = require('./routes/tourRoutes');
 const userRouter = require('./routes/usersRoutes');
 
 const app = express();
-app.use(express.static(`${__dirname}/public`));
+
+
 
 //GLOBAL MIDDLEWARES
 /*
 this can modify the incoming requests
 it stands middle of the request and response
 */
+//==== Set security HTTP headers
+app.use(helmet()) // we put this a the top of all middlewares so the header to be set
+                  // early on
+
+//==== Development Logging
+if (process.env.NODE_ENV === 'Development') {
+  app.use(morgan('dev'))
+}
+
+//==== Limit requests from same API  
 const limiter = rateLimit({
   max: 100, // This will limit how many requests are allowed for a given IP address
   windowMs: 1 * 60 * 60 * 1000, // after exceeding the maximum rate limit, this windowMs will all the user to try again after this
@@ -24,13 +39,32 @@ const limiter = rateLimit({
                                 // changed to milliseconds
   message: 'Too many requests, please try again'
 })
-app.use(express.json());
 app.use('/api', limiter)
+
+//==== Body parser, reading data from body into req. boyd
+/*
+We can limit data that comes in the body 
+app.use(express.json({
+  limit: '10kb
+}));
+*/
+app.use(express.json());
+
+// ==== Data sanitization against NoSQL query injection
+app.use(mongoSanitize())
+
+//===== Data sanitization against XSS
+app.use(xss()) // this will clean any malicious html code, and it will convert all HTML symbols/
+               // for the server side you can add extra validation to mongoose validation and will also protect from xss attacks.
+
+//==== Serving static files
+app.use(express.static(`${__dirname}/public`));
 app.use(morgan('tiny'));
+
+//==== Testing middleware
 app.use((req, res, next) => {
   // we are manipulating request to add request time property to the req object
   req.requestTime = new Date().toISOString();
-  //console.log(req.headers);
   next();
 });
 
