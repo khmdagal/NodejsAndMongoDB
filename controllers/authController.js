@@ -26,7 +26,8 @@ const createAndSendToken = (user, statusCode, res) => {
 
   res.cookie('jwt',token,cookieOptions)
 
-
+  // We want to hide the encrypted password, so it is not in the response when a new user is created
+  user.password = undefined
 
   res.status(statusCode).json({
     status: 'success',
