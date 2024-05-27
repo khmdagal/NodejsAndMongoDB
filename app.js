@@ -1,6 +1,7 @@
 // core modules
 const express = require('express');
 const morgan = require('morgan');
+const rateLimit = require('express-rate-limit')
 const AppError = require('./utils/appError');
 const globalErrorHandling = require('./controllers/errorController');
 
@@ -11,12 +12,20 @@ const userRouter = require('./routes/usersRoutes');
 const app = express();
 app.use(express.static(`${__dirname}/public`));
 
-// MIDDLEWARES
+//GLOBAL MIDDLEWARES
 /*
 this can modify the incoming requests
 it stands middle of the request and response
 */
+const limiter = rateLimit({
+  max: 100, // This will limit how many requests are allowed for a given IP address
+  windowMs: 1 * 60 * 60 * 1000, // after exceeding the maximum rate limit, this windowMs will all the user to try again after this
+                                // period finishes  1 hours * 60 minutes * 60 seconds * 1000 milliseconds, so the whole period is
+                                // changed to milliseconds
+  message: 'Too many requests, please try again'
+})
 app.use(express.json());
+app.use('/api', limiter)
 app.use(morgan('tiny'));
 app.use((req, res, next) => {
   // we are manipulating request to add request time property to the req object
