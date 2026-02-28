@@ -68,7 +68,10 @@ exports.postTours = async (req, res) => {
 
 exports.getTourById = async (req, res) => {
   try {
-    const tour = await Tour.findById(req.params.id);
+    const tour = await Tour.findById(req.params.id).populate({
+      path: 'guides',
+      select: '-__v -passwordChangedAt',
+    });
     // Tour.findOne({ _id: req.params.id }); // same as above
     res.status(200).json({
       status: 'success',
