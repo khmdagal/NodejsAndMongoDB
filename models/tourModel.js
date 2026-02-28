@@ -125,6 +125,13 @@ tourSchema.pre('save', function(next) {
   next();
 });
 
+tourSchema.pre(/^find/, function(){
+  this.populate({
+    path: 'guides',
+    select: '-__v -passwordChangedAt'
+  })
+})
+
 // tourSchema.pre('save', async function(next){
 //   const guidesPromise = this.guides.map(async id => await User.findById(id));
 //   this.guides = await Promise.all(guidesPromise);
